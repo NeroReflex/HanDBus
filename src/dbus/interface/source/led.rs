@@ -1,5 +1,5 @@
 use std::error::Error;
-use crate::udev::device::{AttributeGetter, AttributeSetter, UdevDevice};
+use crate::udev::device::UdevDevice;
 use zbus::{fdo, Connection};
 use zbus_macros::interface;
 use crate::input::source::iio::get_dbus_path;

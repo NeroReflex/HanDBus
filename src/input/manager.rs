@@ -5,7 +5,6 @@ use std::fs;
 use std::time::Duration;
 
 use ::procfs::CpuInfo;
-use tokio::task::JoinError;
 use ::udev::MonitorBuilder;
 use mio::{Events, Interest, Poll, Token};
 use thiserror::Error;
