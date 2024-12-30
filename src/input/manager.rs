@@ -1061,7 +1061,31 @@ impl Manager {
                                     continue;
                                 }
 
-                                log::trace!("Found matching led device {} ({})", device.name(), device.sysname());
+                                // Check if the device has already been used in this config or not, stop here if the device must be unique.
+                                if let Some(sources) = self.composite_device_sources.get(composite_device) {
+                                    for source in sources {
+                                        if source != source_device {
+                                            continue;
+                                        }
+                                        if let Some(ignored) = source_device.ignore {
+                                            if ignored {
+                                                log::debug!("Ignoring device {:?}, not adding to composite device: {}", source_device, composite_device);
+                                                break 'start;
+                                            }
+                                        }
+                                        if let Some(unique) = source_device.clone().unique {
+                                            if unique {
+                                                log::trace!("Found unique device {:?}, not adding to composite device {}", source_device, composite_device);
+                                                break 'start;
+                                            }
+                                        } else {
+                                            log::trace!("Found unique device {:?}, not adding to composite device {}", source_device, composite_device);
+                                            break 'start;
+                                        }
+                                    }
+                                }
+
+                                log::info!("Found missing device, adding source device {id} to existing composite device: {composite_device}");
 
                                 // TODO: continue
                             },

@@ -27,7 +27,7 @@ use crate::{
             Event,
         },
         output_event::UinputOutputEvent,
-        source::{evdev::EventDevice, hidraw::HidRawDevice, iio::IioDevice, SourceDevice},
+        source::{evdev::EventDevice, hidraw::HidRawDevice, iio::IioDevice, led::LedDevice, SourceDevice},
     },
     udev::{device::UdevDevice, hide_device, unhide_device},
 };
@@ -1431,6 +1431,25 @@ impl CompositeDevice {
                 log::debug!("Adding source device: {:?}", device.name());
                 let device = IioDevice::new(device, self.client(), config)?;
                 SourceDevice::Iio(device)
+            }
+            "leds" => {
+                // Get any defined config for the IIO device
+                let config = if let Some(device_config) = self.config.get_matching_device(&device) {
+                    device_config.led
+                } else {
+                    None
+                };
+
+                log::debug!("Adding source device: {:?}", device.name());
+                /*let device = LedDevice::new(device, self.client(), config)?;
+                SourceDevice::Iio(device)*/
+
+                // TODO: remove me
+                return Err(format!(
+                    "Unspported subsystem: {subsystem}, unable to add source device {}",
+                    device.name()
+                )
+                .into())
             }
             _ => {
                 return Err(format!(
