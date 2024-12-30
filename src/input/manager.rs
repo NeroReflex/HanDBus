@@ -1057,7 +1057,10 @@ impl Manager {
                         self.source_devices.insert(id, source_device.clone());
                         return Ok(());
                     }
-                }
+                },
+                "leds" => {
+
+                },
                 _ => (),
             };
             log::trace!(
@@ -1295,18 +1298,13 @@ impl Manager {
     async fn on_device_added(&mut self, device: UdevDevice) -> Result<(), Box<dyn Error>> {
         let dev_path = device.devpath();
 
-        if device.devnode().is_empty() {
-            return Ok(());
-        }
-        
         let sys_name = device.sysname();
         if sys_name.is_empty() {
+            log::warn!("Device discarded for missing sysname: {} at {}", device.name(), device.syspath());
             return Ok(());
         }
         let sysname = sys_name.clone();
         let dev = device.clone();
-
-        log::debug!("Device added: {}", device.name());
 
         // Get the device subsystem
         let subsystem = device.subsystem();
@@ -1317,7 +1315,12 @@ impl Manager {
         // Create a DBus interface depending on the device subsystem
         match subsystem.as_str() {
             "input" => {
-                log::debug!("Event device added");
+                if device.devnode().is_empty() {
+                    log::warn!("Event device discarded for missing devnode: {} at {}", device.name(), device.sysname());
+                    return Ok(());
+                }
+
+                log::debug!("Event device added: {} ({})", device.name(), device.sysname());
 
                 // Create a DBus interface for the event device
                 let conn = self.dbus.clone();
@@ -1380,7 +1383,13 @@ impl Manager {
                 log::debug!("Finished adding {id}");
             }
             "hidraw" => {
-                log::debug!("hidraw device added");
+                if device.devnode().is_empty() {
+                    log::warn!("Hidraw device discarded for missing devnode: {} at {}", device.name(), device.sysname());
+                    return Ok(());
+                }
+
+                log::debug!("Hidraw device added: {} ({})", device.name(), device.sysname());
+
                 // Create a DBus interface for the event device
                 let conn = self.dbus.clone();
                 let path = hidraw::get_dbus_path(sys_name.clone());
@@ -1473,7 +1482,12 @@ impl Manager {
             }
 
             "iio" => {
-                log::debug!("iio device added");
+                if device.devnode().is_empty() {
+                    log::warn!("IIO device discarded for missing devnode: {} at {}", device.name(), device.sysname());
+                    return Ok(());
+                }
+
+                log::debug!("IIO device added: {} ({})", device.name(), device.sysname());
 
                 // Create a DBus interface for the event device
                 let conn = self.dbus.clone();
@@ -1518,7 +1532,8 @@ impl Manager {
             },
 
             "leds" => {
-                log::debug!("LED device added");
+                log::debug!("LED device added: {} ({})", device.name(), device.sysname());
+
                 // Create a DBus interface for the event device
                 let conn = self.dbus.clone();
                 log::debug!("Attempting to listen on dbus for {dev_path} | {sysname}");
