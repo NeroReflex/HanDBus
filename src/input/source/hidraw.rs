@@ -59,21 +59,6 @@ pub enum HidRawDevice {
 }
 
 impl SourceDeviceCompatible for HidRawDevice {
-    fn get_device(&self) -> UdevDevice {
-        match self {
-            HidRawDevice::DualSense(source_driver) => source_driver.info(),
-            HidRawDevice::SteamDeck(source_driver) => source_driver.info(),
-            HidRawDevice::LegionGoDCombined(source_driver) => source_driver.info(),
-            HidRawDevice::LegionGoDSplit(source_driver) => source_driver.info(),
-            HidRawDevice::LegionGoFPS(source_driver) => source_driver.info(),
-            HidRawDevice::LegionGoX(source_driver) => source_driver.info(),
-            HidRawDevice::OrangePiNeo(source_driver) => source_driver.info(),
-            HidRawDevice::Fts3528Touchscreen(source_driver) => source_driver.info(),
-            HidRawDevice::XpadUhid(source_driver) => source_driver.info(),
-            HidRawDevice::RogAlly(source_driver) => source_driver.info(),
-        }
-    }
-
     fn get_device_ref(&self) -> &UdevDevice {
         match self {
             HidRawDevice::DualSense(source_driver) => source_driver.info_ref(),

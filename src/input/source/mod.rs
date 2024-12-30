@@ -355,9 +355,6 @@ impl<T: SourceInputDevice + SourceOutputDevice + Send + 'static> SourceDriver<T>
 }
 
 pub(crate) trait SourceDeviceCompatible {
-    /// Returns a copy of the devices UdevDevice
-    fn get_device(&self) -> UdevDevice;
-
     /// Returns a copy of the UdevDevice
     fn get_device_ref(&self) -> &UdevDevice;
 
@@ -387,15 +384,6 @@ pub enum SourceDevice {
 }
 
 impl SourceDevice {
-    /// Returns a copy of the devices UdevDevice
-    pub fn get_device(&self) -> UdevDevice {
-        match self {
-            SourceDevice::Event(device) => device.get_device(),
-            SourceDevice::HidRaw(device) => device.get_device(),
-            SourceDevice::Iio(device) => device.get_device(),
-            SourceDevice::Led(device) => device.get_device(),
-        }
-    }
 
     /// Returns a copy of the UdevDevice
     pub fn get_device_ref(&self) -> &UdevDevice {

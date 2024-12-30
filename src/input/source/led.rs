@@ -19,12 +19,6 @@ pub enum LedDevice {
 }
 
 impl SourceDeviceCompatible for LedDevice {
-    fn get_device(&self) -> UdevDevice {
-        match self {
-            LedDevice::MultiColorChassis(source_driver) => source_driver.info(),
-        }
-    }
-
     fn get_device_ref(&self) -> &UdevDevice {
         match self {
             LedDevice::MultiColorChassis(source_driver) => source_driver.info_ref(),

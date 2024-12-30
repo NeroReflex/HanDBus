@@ -28,13 +28,6 @@ pub enum EventDevice {
 }
 
 impl SourceDeviceCompatible for EventDevice {
-    fn get_device(&self) -> UdevDevice {
-        match self {
-            EventDevice::Blocked(source_driver) => source_driver.info(),
-            EventDevice::Gamepad(source_driver) => source_driver.info(),
-        }
-    }
-
     fn get_device_ref(&self) -> &UdevDevice {
         match self {
             EventDevice::Blocked(source_driver) => source_driver.info_ref(),

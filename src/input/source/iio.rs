@@ -31,13 +31,6 @@ pub enum IioDevice {
 }
 
 impl SourceDeviceCompatible for IioDevice {
-    fn get_device(&self) -> UdevDevice {
-        match self {
-            IioDevice::BmiImu(source_driver) => source_driver.info(),
-            IioDevice::AccelGryo3D(source_driver) => source_driver.info(),
-        }
-    }
-
     fn get_device_ref(&self) -> &UdevDevice {
         match self {
             IioDevice::BmiImu(source_driver) => source_driver.info_ref(),
