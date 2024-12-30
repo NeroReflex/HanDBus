@@ -832,29 +832,29 @@ impl Manager {
                         }
                     }
 
-                    log::info!("Found missing device, adding source device {id:?} to existing composite device: {composite_device:?}");
-                    let client = self.composite_devices.get(composite_device.as_str());
-                    if client.is_none() {
-                        log::error!("No existing composite device found for key {composite_device:?}");
-                        continue;
-                    }
-                    self.add_device_to_composite_device(device, client.unwrap())
-                        .await?;
-                    self.source_devices_used
-                        .insert(id.clone(), composite_device.clone());
-                    let composite_id = composite_device.clone();
-                    if !self.composite_device_sources.contains_key(&composite_id) {
-                        self.composite_device_sources
-                            .insert(composite_id.clone(), Vec::new());
-                    }
-                    let sources = self
-                        .composite_device_sources
-                        .get_mut(&composite_id)
-                        .unwrap();
-                    sources.push(source_device.clone());
-                    self.source_devices.insert(id, source_device.clone());
+                    log::info!("Found missing {} device, adding source device {id} to existing composite device: {composite_device:?}", device.subsystem());
+                    match self.composite_devices.get(composite_device.as_str()) {
+                        Some(client) => {
+                            self.add_device_to_composite_device(device, client)
+                                .await?;
+                            self.source_devices_used
+                                .insert(id.clone(), composite_device.clone());
+                            let composite_id = composite_device.clone();
+                            if !self.composite_device_sources.contains_key(&composite_id) {
+                                self.composite_device_sources
+                                    .insert(composite_id.clone(), Vec::new());
+                            }
+                            let sources = self
+                                .composite_device_sources
+                                .get_mut(&composite_id)
+                                .unwrap();
+                            sources.push(source_device.clone());
+                            self.source_devices.insert(id, source_device.clone());
 
-                    return Ok(());
+                            return Ok(())
+                        },
+                        None => log::error!("No existing composite device found for key {composite_device:?}")
+                    }
                 },
                 None => {
                     log::trace!(
@@ -896,155 +896,37 @@ impl Manager {
                 continue;
             }
 
-            // Check if this device matches any source udev configs
-            for source_device in config.source_devices.iter() {
-                let Some(udev_config) = source_device.udev.as_ref() else {
-                    continue;
-                };
-                if !config.has_matching_udev(&device, udev_config) {
-                    continue;
-                }
-
-                if let Some(ignored) = source_device.ignore {
-                    if ignored {
-                        log::trace!("Event device configured to ignore: {:?}", device);
-                        return Ok(());
+            // Check if this device matches any source configs
+            match config.get_matching_device(&device) {
+                Some(source_device) => {
+                    if let Some(ignored) = source_device.ignore {
+                        if ignored {
+                            log::trace!("Event device configured to ignore: {:?}", device);
+                            return Ok(());
+                        }
                     }
-                }
-                log::info!("Found a matching udev device {id}, creating CompositeDevice");
-                let dev = self
-                    .create_composite_device_from_config(&config, device)
+                    log::info!("Found a matching {} device {id}, creating CompositeDevice", device.subsystem());
+                    let dev = self
+                        .create_composite_device_from_config(&config, device)
+                        .await?;
+    
+                    // Get the target input devices from the config
+                    let target_devices_config = config.target_devices.clone();
+    
+                    // Create the composite deivce
+                    self.start_composite_device(
+                        dev,
+                        config.clone(),
+                        target_devices_config,
+                        source_device.clone(),
+                    )
                     .await?;
-
-                // Get the target input devices from the config
-                let target_devices_config = config.target_devices.clone();
-
-                // Create the composite deivce
-                self.start_composite_device(
-                    dev,
-                    config.clone(),
-                    target_devices_config,
-                    source_device.clone(),
-                )
-                .await?;
-
-                return Ok(());
+    
+                    return Ok(());
+                }
+                None => {}
             }
 
-            let source_devices = config.source_devices.clone();
-            match device.subsystem().as_str() {
-                "input" => {
-                    for source_device in source_devices {
-                        if source_device.evdev.is_none() {
-                            continue;
-                        }
-                        // how to refrence source devices used by this config?
-
-                        if config.has_matching_evdev(&device, &source_device.clone().evdev.unwrap())
-                        {
-                            if let Some(ignored) = source_device.ignore {
-                                if ignored {
-                                    log::trace!("Event device configured to ignore: {:?}", device);
-                                    return Ok(());
-                                }
-                            }
-                            log::info!(
-                                "Found a matching evdev device {id}, creating CompositeDevice"
-                            );
-                            let dev = self
-                                .create_composite_device_from_config(&config, device)
-                                .await?;
-
-                            // Get the target input devices from the config
-                            let target_devices_config = config.target_devices.clone();
-
-                            // Create the composite deivce
-                            self.start_composite_device(
-                                dev,
-                                config,
-                                target_devices_config,
-                                source_device.clone(),
-                            )
-                            .await?;
-
-                            return Ok(());
-                        }
-                    }
-                }
-                "hidraw" => {
-                    for source_device in source_devices {
-                        if source_device.hidraw.is_none() {
-                            continue;
-                        }
-                        if config
-                            .has_matching_hidraw(&device, &source_device.clone().hidraw.unwrap())
-                        {
-                            if let Some(ignored) = source_device.ignore {
-                                if ignored {
-                                    log::trace!("hidraw device configured to ignore: {:?}", device);
-                                    return Ok(());
-                                }
-                            }
-                            log::info!(
-                                "Found a matching hidraw device {id}, creating CompositeDevice"
-                            );
-                            let dev = self
-                                .create_composite_device_from_config(&config, device)
-                                .await?;
-
-                            // Get the target input devices from the config
-                            let target_devices_config = config.target_devices.clone();
-
-                            // Create the composite deivce
-                            self.start_composite_device(
-                                dev,
-                                config,
-                                target_devices_config,
-                                source_device.clone(),
-                            )
-                            .await?;
-
-                            return Ok(());
-                        }
-                    }
-                }
-                "iio" => {
-                    for source_device in source_devices {
-                        if source_device.iio.is_none() {
-                            continue;
-                        }
-                        if config.has_matching_iio(&device, &source_device.clone().iio.unwrap()) {
-                            if let Some(ignored) = source_device.ignore {
-                                if ignored {
-                                    log::trace!("iio device configured to ignore: {:?}", device);
-                                    return Ok(());
-                                }
-                            }
-                            log::info!(
-                                "Found a matching iio device {id}, creating CompositeDevice"
-                            );
-                            let dev = self
-                                .create_composite_device_from_config(&config, device.clone())
-                                .await?;
-
-                            // Get the target input devices from the config
-                            let target_devices_config = config.target_devices.clone();
-
-                            // Create the composite deivce
-                            self.start_composite_device(
-                                dev,
-                                config,
-                                target_devices_config,
-                                source_device.clone(),
-                            )
-                            .await?;
-
-                            return Ok(());
-                        }
-                    }
-                }
-                _ => (),
-            }
             log::trace!("Device does not match config: {:?}", config.name);
         }
         log::debug!("No unused configs found for device.");
