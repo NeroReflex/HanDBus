@@ -258,13 +258,7 @@ impl CompositeDevice {
         log::debug!("Starting composite device");
 
         // Start all source devices
-        /*let a =*/ self.run_source_devices().await?;
-        /*
-        if let Err(e) = a {
-            return Err(e);
-        }
-         */
-        
+        self.run_source_devices().await?;
 
         // Keep track of all target devices
         for (path, target) in targets.iter() {
