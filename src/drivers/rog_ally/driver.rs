@@ -19,7 +19,7 @@ impl Driver {
         let vid = udevice.id_vendor();
         let pid = udevice.id_product();
         if VID != vid || !PIDS.contains(&pid) {
-            return Err(format!("'{}' is not an ROG Ally controller", udevice.devnode()).into());
+            return Err(format!("'{}' is not an ROG Ally controller", udevice.name()).into());
         }
         // TODO: When resuming from sleep, if mcu_powersave is set, the device init takes longer.
         // inotify will trigger this driver before the attribute tree is fully built and the driver

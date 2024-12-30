@@ -47,17 +47,16 @@ pub struct Driver {
 
 impl Driver {
     pub fn new(udevice: UdevDevice) -> Result<Self, Box<dyn Error + Send + Sync>> {
-        let path = udevice.devnode();
         let driver = udevice.drivers();
         if !driver.contains(&"microsoft".to_string()) {
-            return Err(format!("Device '{path}' is not using the hid-microsoft driver").into());
+            return Err(format!("Device '{}' is not using the hid-microsoft driver", udevice.name()).into());
         }
         let syspath = udevice.syspath();
         if !syspath.contains("uhid") {
-            return Err(format!("Device '{path}' is not a uhid virtual device").into());
+            return Err(format!("Device '{}' is not a uhid virtual device", udevice.name()).into());
         }
 
-        let cs_path = CString::new(path.clone())?;
+        let cs_path = CString::new(udevice.devnode().clone())?;
         let api = hidapi::HidApi::new()?;
         let device = api.open_path(&cs_path)?;
 

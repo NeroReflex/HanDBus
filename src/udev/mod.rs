@@ -8,6 +8,7 @@ pub mod device;
 
 use std::{error::Error, fs, path::Path};
 
+use device::AttributeGetter;
 use tokio::process::Command;
 use udev::Enumerator;
 
@@ -224,13 +225,7 @@ pub fn discover_devices(subsystem: &str) -> Result<Vec<udev::Device>, Box<dyn Er
     let mut node_devices = Vec::new();
     let devices = enumerator.scan_devices()?;
     for device in devices {
-        let Some(_) = device.devnode() else {
-            log::trace!("No devnode found for device: {:?}", device);
-            continue;
-        };
-
-        let name = device.sysname();
-        log::debug!("udev {subsystem} enumerator found device: {:?}", name);
+        log::debug!("udev {subsystem} enumerator found device: {}", device.sysname().to_string_lossy());
 
         node_devices.push(device);
     }

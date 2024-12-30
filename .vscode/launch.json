@@ -8,7 +8,8 @@
             "name": "Remote launch",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/target/debug/inputplumber", // Local path.
+            "program": "${workspaceFolder}/target/debug/inputplumber",
+            "sourceLanguages": ["rust"],
             "initCommands": [
                 "platform select remote-linux", // For example: 'remote-linux', 'remote-macosx', 'remote-android', etc.
                 "platform connect connect://192.168.1.19:1234",

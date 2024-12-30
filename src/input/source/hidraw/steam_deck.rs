@@ -1,10 +1,5 @@
 use std::{
-    collections::HashMap,
-    error::Error,
-    fmt::Debug,
-    sync::{Arc, Mutex},
-    thread,
-    time::Duration,
+    collections::HashMap, error::Error, fmt::Debug, path::Path, sync::{Arc, Mutex}, thread, time::Duration
 };
 
 use evdev::{FFEffectData, FFEffectKind, InputEvent};
@@ -47,7 +42,12 @@ impl DeckController {
     /// Create a new Deck Controller source device with the given udev
     /// device information
     pub fn new(device_info: UdevDevice) -> Result<Self, Box<dyn Error + Send + Sync>> {
-        let driver = Driver::new(device_info.devnode())?;
+        let path = device_info.devnode();
+        if !Path::new(path.as_str()).exists() {
+            return Err(format!("Device '{}' does not have a devnode: a valid Deck Controller has one", device_info.name()).into());
+        }
+
+        let driver = Driver::new(path)?;
 
         Ok(Self {
             driver,
