@@ -866,10 +866,7 @@ impl Manager {
             // TODO: Consolidate these
             match device.subsystem().as_str() {
                 "input" => {
-                    log::trace!(
-                        "Checking if existing composite device is missing evdev device: {:?}",
-                        device.name()
-                    );
+                    log::trace!("Checking if existing composite device is missing evdev device {} ({})", device.name(), device.sysname());
                     for source_device in config.source_devices.iter() {
                         let Some(evdev_config) = source_device.evdev.as_ref() else {
                             log::trace!("Evdev section is empty");
@@ -932,10 +929,7 @@ impl Manager {
                     }
                 }
                 "hidraw" => {
-                    log::trace!(
-                        "Checking if existing composite device is missing hidraw device: {:?}",
-                        device.name()
-                    );
+                    log::trace!("Checking if existing composite device is missing hidraw device {} ({})", device.name(), device.sysname());
                     for source_device in config.source_devices.iter() {
                         let Some(hidraw_config) = source_device.hidraw.as_ref() else {
                             continue;
@@ -997,7 +991,7 @@ impl Manager {
                     }
                 }
                 "iio" => {
-                    log::trace!("Checking if existing composite device is missing iio device");
+                    log::trace!("Checking if existing composite device is missing iio device {} ({})", device.name(), device.sysname());
                     for source_device in config.source_devices.iter() {
                         let Some(iio_config) = source_device.iio.as_ref() else {
                             continue;
@@ -1059,7 +1053,21 @@ impl Manager {
                     }
                 },
                 "leds" => {
+                    log::trace!("Checking if existing composite device is missing led device {} ({})", device.name(), device.sysname());
+                    for source_device in config.source_devices.iter() {
+                        match source_device.led.as_ref() {
+                            Some(led_config) => {
+                                if !config.has_matching_led(&device, led_config) {
+                                    continue;
+                                }
 
+                                log::trace!("Found matching led device {} ({})", device.name(), device.sysname());
+
+                                // TODO: continue
+                            },
+                            None => { continue; }
+                        }
+                    }
                 },
                 _ => (),
             };
