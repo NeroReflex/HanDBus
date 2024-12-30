@@ -236,11 +236,6 @@ impl<T: SourceInputDevice + SourceOutputDevice + Send + 'static> SourceDriver<T>
         self.tx.clone().into()
     }
 
-    /// Returns udev device information about the device
-    pub fn info(&self) -> UdevDevice {
-        self.device_info.clone()
-    }
-
     /// Returns udev device information about the device as a reference
     pub fn info_ref(&self) -> &UdevDevice {
         &self.device_info
