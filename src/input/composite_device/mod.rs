@@ -1441,15 +1441,8 @@ impl CompositeDevice {
                 };
 
                 log::debug!("Adding source device: {:?}", device.name());
-                /*let device = LedDevice::new(device, self.client(), config)?;
-                SourceDevice::Iio(device)*/
 
-                // TODO: remove me
-                return Err(format!(
-                    "Unspported subsystem: {subsystem}, unable to add source device {}",
-                    device.name()
-                )
-                .into())
+                SourceDevice::Led(LedDevice::new(device, self.client())?)
             }
             _ => {
                 return Err(format!(
