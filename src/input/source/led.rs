@@ -6,7 +6,7 @@ use crate::{
     udev::device::UdevDevice,
 };
 use self::multicolor_chassis::MultiColorChassis;
-use super::{SourceDriver, SourceInputDevice};
+use super::{SourceDeviceCompatible, SourceDriver, SourceInputDevice};
 /// List of available drivers
 enum DriverType {
     Unknown,
@@ -17,6 +17,51 @@ enum DriverType {
 pub enum LedDevice {
     MultiColorChassis(SourceDriver<MultiColorChassis>),
 }
+
+impl SourceDeviceCompatible for LedDevice {
+    fn get_device(&self) -> UdevDevice {
+        match self {
+            LedDevice::MultiColorChassis(source_driver) => source_driver.info(),
+        }
+    }
+
+    fn get_device_ref(&self) -> &UdevDevice {
+        match self {
+            LedDevice::MultiColorChassis(source_driver) => source_driver.info_ref(),
+        }
+    }
+
+    fn get_id(&self) -> String {
+        match self {
+            LedDevice::MultiColorChassis(source_driver) => source_driver.get_id(),
+        }
+    }
+
+    fn client(&self) -> super::client::SourceDeviceClient {
+        match self {
+            LedDevice::MultiColorChassis(source_driver) => source_driver.client(),
+        }
+    }
+
+    async fn run(self) -> Result<(), Box<dyn Error>> {
+        match self {
+            LedDevice::MultiColorChassis(source_driver) => source_driver.run().await,
+        }
+    }
+
+    fn get_capabilities(&self) -> Result<Vec<crate::input::capability::Capability>, super::InputError> {
+        match self {
+            LedDevice::MultiColorChassis(source_driver) => source_driver.get_capabilities(),
+        }
+    }
+
+    fn get_device_path(&self) -> String {
+        match self {
+            LedDevice::MultiColorChassis(source_driver) => source_driver.get_device_path(),
+        }
+    }
+}
+
 impl LedDevice {
     /// Create a new [IioDevice] associated with the given device and
     /// composite device. The appropriate driver will be selected based on
