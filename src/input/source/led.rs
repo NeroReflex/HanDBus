@@ -6,10 +6,9 @@ use crate::{
     udev::device::UdevDevice,
 };
 use self::multicolor_chassis::MultiColorChassis;
-use super::{SourceDeviceCompatible, SourceDriver, SourceInputDevice};
+use super::{SourceDeviceCompatible, SourceDriver};
 /// List of available drivers
 enum DriverType {
-    Unknown,
     MultiColorChassis,
 }
 /// [LedDevice] represents an input device using the leds subsystem.
@@ -63,12 +62,18 @@ impl LedDevice {
     pub fn new(
         device_info: UdevDevice,
         composite_device: CompositeDeviceClient,
+        config: Option<config::Led>
     ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         let driver_type = LedDevice::get_driver_type(&device_info);
         match driver_type {
-            DriverType::Unknown => Err("No driver for LED interface found".into()),
             DriverType::MultiColorChassis => {
-                let device = MultiColorChassis::new(device_info.clone())?;
+                let device = MultiColorChassis::new(
+                    device_info.clone(),
+                    match config {
+                        Some(cfg) => cfg.led_fixed_color,
+                        None => None
+                    }
+                )?;
                 let source_device = SourceDriver::new(composite_device, device, device_info);
                 Ok(Self::MultiColorChassis(source_device))
             }

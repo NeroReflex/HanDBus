@@ -1442,7 +1442,7 @@ impl CompositeDevice {
 
                 log::debug!("Adding source device: {:?}", device.name());
 
-                SourceDevice::Led(LedDevice::new(device, self.client())?)
+                SourceDevice::Led(LedDevice::new(device, self.client(), config)?)
             }
             _ => {
                 return Err(format!(

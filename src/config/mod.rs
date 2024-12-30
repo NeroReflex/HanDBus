@@ -369,6 +369,16 @@ pub struct IIO {
 pub struct Led {
     pub id: Option<String>,
     pub name: Option<String>,
+    pub led_fixed_color: Option<LedFixedColor>
+}
+
+#[derive(Debug, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "snake_case")]
+#[allow(clippy::upper_case_acronyms)]
+pub struct LedFixedColor {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
 }
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
